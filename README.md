@@ -9,7 +9,7 @@ Move the [./addons](https://github.com/btzr-io/pusher-websocket-godot/tree/main/
 
 ## Usage
 
-1) Enable the lugin. See guide: [Enabling a plugin](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html#enabling-a-plugin)
+1) Enable the plugin. See guide: [Enabling a plugin](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html#enabling-a-plugin)
 
 2) Add a `Pusher` node to your main scene.
 
