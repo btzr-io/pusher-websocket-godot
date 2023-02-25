@@ -60,8 +60,9 @@ Pusher node methods:
 | signin          |          |                    |
 | subscribe       |          |                    |
 | unsuscribe      |          |                    |
+| bind            |          |                    |
 | trigger         |          |                    |
-| trigger_channel |          |                    |
+
 
 ## Signals
 Pusher node signals:
