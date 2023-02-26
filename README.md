@@ -105,7 +105,7 @@ However, by creating a FuncRef reference to a function in a given object can be 
 
 ```swift
 func event_handler(data):
-  print("Event recived")
+  print("Event received")
   
 var callback = funcref(self, "event_handler")
 ```
