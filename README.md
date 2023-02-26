@@ -4,6 +4,24 @@ A [Pusher Channels](https://pusher.com/channels) client  addon for [Godot](https
 
 Create real-time interactions with the [Pusher Channels Protocol](https://pusher.com/docs/channels/library_auth_reference/pusher-websockets-protocol/) over a [WebSocket connection](https://docs.godotengine.org/en/stable/tutorials/networking/websocket.html).
 
+## Table of Contents
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+  - [Editor](#editor-inspector)
+  - [Runtime](#runtime)
+    - [Options](#options)
+       - [UserAuthentication](#userauthentication)
+- [Connection](#configuration)
+  - [Disconnect](#disconnect)
+- [Subscribing to channels](#subscribing-to-channels)
+  - [Unsubscribing from channels](#unsubscribing-from-channels)
+- [Binding to events](#binding-to-events)
+  - [Event callback](#event-callback)
+  - [Binding on the client](#binding-on-the-client)
+  - [Unbinding from events](#unbinding-from-events)
+- [Signals](#signals)
+  
 ## Installation
 Move the [./addons](https://github.com/btzr-io/pusher-websocket-godot/tree/main/addons/) folder into your project folder.
 
@@ -65,7 +83,7 @@ A connection with custom configuration can be established by passing the same pa
 ```swift
 $Pusher.connect_app(APP_KEY, { "cluster": APP_CLUSTER })
 ```
-
+### Disconnect
 You may disconnect by invoking the `disconnect_app` method:
 ```swift
 $Pusher.disconnect_app()
@@ -77,7 +95,7 @@ The default method for subscribing to a channel involves invoking the `subscribe
 $Pusher.subscribe("my-channel");
 ```
 
-## Unsubscribing from channels
+### Unsubscribing from channels
 To unsubscribe from a channel, invoke the `unsubscribe` method of your pusher object:
 ```swift
 $Pusher.unsubscribe("my-channel");
