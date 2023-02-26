@@ -4,11 +4,12 @@ extends Node
 # ----------
 # Constants:
 # ----------
+#
 
-const Utils = preload("Utils.gd")
-const Binder = preload("Binder.gd")
-const PusherAPI = preload("PusherAPI.gd")
-const PusherChannel = preload("PusherChannel.gd")
+#const Utils = preload("Utils.gd")
+#const Binder = preload("Binder.gd")
+#const PusherAPI = preload("PusherAPI.gd")
+#const PusherChannel = preload("PusherChannel.gd")
 
 const DESCRIPTION = "A Pusher Channels client addon for Godot"
 const CONFIGURATION_WARNING_MESSAGE = "To open a connection you must provide your app key and cluster name."
@@ -56,7 +57,7 @@ var socket_id
 var user_data
 var connection_url
 var connection_state = PusherAPI.STATE.INITIALIZED setget set_connection_state
-var channels = []
+var channels = {}
 var authenticated = false
 var binder = Binder.new()
 
@@ -172,21 +173,26 @@ func signin(params={}, headers={}):
 	if !auth_endpoint: return
 	Utils.post_request(self, "_auth_requested", auth_endpoint, params, headers)
 
-func bind(event, method):
-	binder.bind(event, method)
+func bind(event_name, event_callback):
+	binder.bind(event_name, event_callback)
 
-func unbind(event, method):
-	binder.unbind(event, method)
+func unbind(event_name, event_callback):
+	binder.unbind(event_name, event_callback)
 
 func trigger(event, data = {}):
 	pusher.send_message({ "event": event, "data": data })
 	print_debug("Protocol event sent: ", event)
 
 func subscribe(channel_name):
-	trigger(PusherAPI.SUBSCRIBE, { "channel": channel_name })
+	if not channel_name in channels:
+		trigger(PusherAPI.SUBSCRIBE, { "channel": channel_name })
+		channels[channel_name] = PusherChannel.new(channel_name, self)
+		return channels[channel_name]
 
 func unsubscribe(channel_name):
-	trigger(PusherAPI.UNSUBSCRIBE, { "channel": channel_name })
+	if channel_name in channels:
+		trigger(PusherAPI.UNSUBSCRIBE, { "channel": channel_name })
+		channels.remove(channel_name)
 
 # ---------------
 # Event handlers:
@@ -260,6 +266,10 @@ func _data():
 			_subscribed(channel, data)
 		PusherAPI.INTERNAL_SUBSCRIPTION_SUCCEEDED:
 			_internal_subscribed(channel)
-	
-	# Run binded events
-	binder.run(event, data, channel )
+		_:
+			if not channel:
+				# Run protocol binded events
+				binder.run_callbacks(event, data)
+			else:
+				# Run channel binded events
+				channels[channels].run_callbacks(event, data)
