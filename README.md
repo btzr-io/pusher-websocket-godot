@@ -1,4 +1,4 @@
-# Pusher Channels ( client addon )
+# :rocket: Pusher Channels ( client addon )
 
 A [Pusher Channels](https://pusher.com/channels) client  addon for [Godot](https://github.com/godotengine/godot).
 
