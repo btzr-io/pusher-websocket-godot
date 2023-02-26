@@ -83,6 +83,28 @@ To unsubscribe from a channel, invoke the `unsubscribe` method of your pusher ob
 $Pusher.unsubscribe("my-channel");
 ```
 
+## Binding to events
+
+### Binding on the client:
+Use the `bind` method of the pusher node to listen for an event on all the channels that you are currently subscribed to:
+
+```swift
+$Pusher.bind(EVENT, CALLBACK);
+```
+### Unbinding from events:
+Use `unbind` to remove a binding of an event:
+
+```swift
+$Pusher.unbind(EVENT, CALLBACK);
+```
+
+Params of the `bind` method:
+
+| Param            | Type         | description             |
+|------------------|--------------|-------------------------|
+| event            | string       | The name of the event to bind to. | 
+| callback         | funcRef      | A function to be called whenever the event is triggered.   |
+
 
 ## Signals
 Pusher node signals:
