@@ -6,10 +6,11 @@ Create real-time interactions with the [Pusher Channels Protocol](https://pusher
 
 ## Table of Contents
 - [Installation](#installation)
-- [Usage](#usage)
+- [Quick start](#quick-start)
+  - [Open a connection](#open-a-connection)
+  - [Listen for events](#listen-for-events)
+  - [Subscribe to a channel](#subscribe-to-a-channel)
 - [Configuration](#configuration)
-  - [Editor](#editor-inspector)
-  - [Runtime](#runtime)
     - [Options](#options)
        - [UserAuthentication](#userauthentication)
 - [Connection](#configuration)
@@ -28,10 +29,33 @@ Move the [./addons](https://github.com/btzr-io/pusher-websocket-godot/tree/main/
 See full guide: [Installing a plugin](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html#installing-a-plugin)
 
 
-## Usage
+## Quick start
 Enable the plugin and add a `Pusher` node to your main scene.
 
 See full guide: [Enabling a plugin](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html#enabling-a-plugin)
+
+
+### Open a connection
+```swift
+$Pusher.connect_app( APP_KEY, { "cluster": APP_CLUSTER } )
+```
+
+### Listen for events:
+```swift
+func event_handler(data):
+  print("Event received")
+  
+var callback = funcref(self, "event_handler")
+
+$Pusher.bind("pusher:connection_established", callback);
+
+```
+
+### Subscribe to a channel
+```swift
+$Pusher.subscribe("channel-name")
+```
+
 
 
 ## Configuration
