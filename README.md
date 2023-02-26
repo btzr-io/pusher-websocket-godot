@@ -5,12 +5,16 @@ A [Pusher Channels](https://pusher.com/channels) client  addon for [Godot](https
 Create real-time interactions with the [Pusher Channels Protocol](https://pusher.com/docs/channels/library_auth_reference/pusher-websockets-protocol/) over a [WebSocket connection](https://docs.godotengine.org/en/stable/tutorials/networking/websocket.html).
 
 ## Installation
-Move the [./addons](https://github.com/btzr-io/pusher-websocket-godot/tree/main/addons/) folder into your project folder. See guide: [Installing a plugin](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html#installing-a-plugin)
+Move the [./addons](https://github.com/btzr-io/pusher-websocket-godot/tree/main/addons/) folder into your project folder.
+
+See full guide: [Installing a plugin](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html#installing-a-plugin)
+
 
 ## Usage
+Enable the plugin and add a `Pusher` node to your main scene.
 
-1) Enable the plugin. See guide: [Enabling a plugin](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html#enabling-a-plugin)
-2) Add a `Pusher` node to your main scene.
+See full guide: [Enabling a plugin](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html#enabling-a-plugin)
+
 
 ## Configuration
 
@@ -36,7 +40,7 @@ Params of the `configure` method:
 
 ### Options:
 
-Based on Pusher [channels options](https://pusher.com/docs/channels/using_channels/connection/#channels-options-parameter)
+Based on Pusher [channels options](https://pusher.com/docs/channels/using_channels/connection/#channels-options-parameter) parameter:
 
 | Options             | Type         | description        |
 |---------------------|--------------|--------------------|
@@ -46,7 +50,7 @@ Based on Pusher [channels options](https://pusher.com/docs/channels/using_channe
 ### UserAuthentication:
 
 Based on Pusher [userAuthentication](https://pusher.com/docs/channels/using_channels/connection/#userauthentication-849556825) object:
-| Options             | Type         | description        |
+| Option             | Type         | description        |
 |---------------------|--------------|--------------------|
 | params              | dictionary   | Additional [parameters](https://pusher.com/docs/channels/using_channels/connection/#userauthenticationparams-133540021) |
 | headers             | dictionary   | Additional HTTP [headers](https://pusher.com/docs/channels/using_channels/connection/#userauthenticationheaders-168766504) |
@@ -57,12 +61,12 @@ A connection to Pusher Channels can be established by invoking the `connect_app`
 ```swift
 $Pusher.connect_app()
 ```
-A connection with custom configuration can be established by passing the same params from `configure` method:
+A connection with custom configuration can be established by passing the same params from [configure](#runtime) method:
 ```swift
 $Pusher.connect_app(APP_KEY, { "cluster": APP_CLUSTER })
 ```
 
-You may disconnect again by invoking the `disconnect_app` method:
+You may disconnect by invoking the `disconnect_app` method:
 ```swift
 $Pusher.disconnect_app()
 ```
