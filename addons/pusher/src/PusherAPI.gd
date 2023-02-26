@@ -24,6 +24,7 @@ const SUBSCRIPTION_ERROR = "pusher:subscription_error"
 const SUBSCRIPTION_SUCCEEDED = "pusher:subscription_succeeded"
 const INTERNAL_SUBSCRIPTION_SUCCEEDED = "pusher_internal:subscription_succeeded"
 
+
 # Connection states
 enum STATE {
 	FAILED

@@ -10,6 +10,11 @@ config_version=4
 
 _global_script_classes=[ {
 "base": "Object",
+"class": "Binder",
+"language": "GDScript",
+"path": "res://addons/pusher/src/Binder.gd"
+}, {
+"base": "Object",
 "class": "PusherAPI",
 "language": "GDScript",
 "path": "res://addons/pusher/src/PusherAPI.gd"
@@ -25,6 +30,7 @@ _global_script_classes=[ {
 "path": "res://addons/pusher/src/Utils.gd"
 } ]
 _global_script_class_icons={
+"Binder": "",
 "PusherAPI": "",
 "PusherChannel": "",
 "Utils": ""
