@@ -24,6 +24,7 @@ Create real-time interactions with the [Pusher Channels Protocol](https://pusher
 - [Binding to events](#binding-to-events)
   - [Event callback](#event-callback)
   - [Binding on the client](#binding-on-the-client)
+  - [Binding on the channel](#binding-on-the-channel)
   - [Unbinding from events](#unbinding-from-events)
   
 ## Installation
