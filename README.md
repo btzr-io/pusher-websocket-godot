@@ -1,8 +1,6 @@
-# :rocket: Pusher channels plugin
+# :rocket: Pusher Channels ( godot plugin )
 
-A [Pusher Channels](https://pusher.com/channels) client  addon for [Godot](https://github.com/godotengine/godot).
-
-Create real-time interactions with the [Pusher Channels Protocol](https://pusher.com/docs/channels/library_auth_reference/pusher-websockets-protocol/) over a [WebSocket connection](https://docs.godotengine.org/en/stable/tutorials/networking/websocket.html).
+A [Godot](https://github.com/godotengine/godot) plugin for creating real-time interactions with the [Pusher Channels Protocol](https://pusher.com/docs/channels/library_auth_reference/pusher-websockets-protocol/) over a [WebSocket connection](https://docs.godotengine.org/en/stable/tutorials/networking/websocket.html).
 
 ## Table of Contents
 - [Installation](#installation)
