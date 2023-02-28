@@ -13,6 +13,7 @@ Create real-time interactions with the [Pusher Channels Protocol](https://pusher
 - [Configuration](#configuration)
     - [Options](#options)
        - [UserAuthentication](#userauthentication)
+       - [ChannelAuthorization](#userauthentication)
 - [Connection](#configuration)
   - [Disconnect](#disconnect)
 - [Subscribing to channels](#subscribing-to-channels)
@@ -21,7 +22,6 @@ Create real-time interactions with the [Pusher Channels Protocol](https://pusher
   - [Event callback](#event-callback)
   - [Binding on the client](#binding-on-the-client)
   - [Unbinding from events](#unbinding-from-events)
-- [Signals](#signals)
   
 ## Installation
 Move the [./addons](https://github.com/btzr-io/pusher-websocket-godot/tree/main/addons/) folder into your project folder.
@@ -60,13 +60,6 @@ $Pusher.subscribe("channel-name")
 
 ## Configuration
 
-### Editor inspector
-Minimal configuration is available in the inspector but is recommended to use the [configure](#runtime) method:
-
-![image](https://user-images.githubusercontent.com/14793624/221388478-c83e698a-1326-4d03-b98f-00390e9b8624.png)
-
-### Runtime
-
 It is possible to set and update the client configuration through the `configure` method:
 
 ```swift
@@ -88,15 +81,25 @@ Based on Pusher [channels options](https://pusher.com/docs/channels/using_channe
 |---------------------|--------------|--------------------|
 | cluster             | string       | The [cluster](https://pusher.com/docs/channels/miscellaneous/clusters/) used by your application |
 | userAuthentication  | dictionary   | See [below](#userauthentication) |
+| channelAuthorization  | dictionary   | See [below](#channelauthorization) |
 
 ### UserAuthentication:
 
 Based on Pusher [userAuthentication](https://pusher.com/docs/channels/using_channels/connection/#userauthentication-849556825) object:
 | Option             | Type         | description        |
 |---------------------|--------------|--------------------|
-| params              | dictionary   | Additional [parameters](https://pusher.com/docs/channels/using_channels/connection/#userauthenticationparams-133540021) |
-| headers             | dictionary   | Additional HTTP [headers](https://pusher.com/docs/channels/using_channels/connection/#userauthenticationheaders-168766504) |
+| params              | dictionary   | Additional parameters |
+| headers             | dictionary   | Additional HTTP headers |
 | endpoint            | string       | URL [endpoint](https://pusher.com/docs/channels/using_channels/connection/#userauthenticationendpoint-1618076675) of server for authentication. |
+
+### ChannelAuthorization:
+
+Based on Pusher [channelAuthorization](https://pusher.com/docs/channels/using_channels/connection/#channelauthorization-1528180693) object:
+| Option             | Type         | description        |
+|---------------------|--------------|--------------------|
+| params              | dictionary   | Additional parameters |
+| headers             | dictionary   | Additional HTTP headers |
+| endpoint            | string       | URL [endpoint](https://pusher.com/docs/channels/using_channels/connection/#channelauthorizationendpoint-1363574431) |
 
 ## Connection
 A connection to Pusher Channels can be established by invoking the `connect_app` method of your pusher node:
@@ -112,8 +115,9 @@ You may disconnect by invoking the `disconnect_app` method:
 ```swift
 $Pusher.disconnect_app()
 ```
+## Channels
 
-## Subscribing to channels
+### Subscribing to channels
 The default method for subscribing to a channel involves invoking the `subscribe` method of your pusher node:
 ```swift
 $Pusher.subscribe("my-channel");
@@ -124,6 +128,15 @@ To unsubscribe from a channel, invoke the `unsubscribe` method of your pusher ob
 ```swift
 $Pusher.unsubscribe("my-channel");
 ```
+
+### Accessing channels
+If a channel has been subscribed to already it is possible to access channels by name, through the `channel` method:
+```swift
+var channel = $Pusher.channel("channel-name")
+```
+
+
+
 
 ## Binding to events
 
@@ -152,9 +165,10 @@ func event_handler(data):
 var callback = funcref(self, "event_handler")
 ```
 
-Bind to event:
+### Binding on the channel
+Events can be bound to directly on a channel. This means you will only receive an event if it is sent on that specific channel:
 ```swift
-$Pusher.bind("event_name", callback);
+channel.bind(eventName, callback);
 ```
 
 ### Unbinding from events:
@@ -171,12 +185,3 @@ Params of the `unbind` method:
 | event            | string       | The name of the event from which your want to remove the binding. | 
 | callback         | funcRef      | The function reference used when binding to the event.    |
 
-
-## Signals
-Pusher node signals:
-
-| Signal        | Params                               | description        |
-|---------------|--------------------------------------|--------------------|
-| error         | { code: int, message: str }          | Emitted for the [pusher:error](https://pusher.com/docs/channels/library_auth_reference/pusher-websockets-protocol/#pushererror-pusher-channels-greater-client) event    |
-| connected     | { socket_id: str, timeout: int }     | Emitted for the [pusher:connection_established]( https://pusher.com/docs/channels/library_auth_reference/pusher-websockets-protocol/#pusherconnection_established-pusher-channels-greater-client) event |
-| state_changed | state: str                           | Emitted for all [connection state](https://pusher.com/docs/channels/using_channels/connection/#connection-states) changes         |
