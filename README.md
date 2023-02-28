@@ -101,6 +101,17 @@ Based on Pusher [channelAuthorization](https://pusher.com/docs/channels/using_ch
 | headers             | dictionary   | Additional HTTP headers |
 | endpoint            | string       | URL [endpoint](https://pusher.com/docs/channels/using_channels/connection/#channelauthorizationendpoint-1363574431) |
 
+### Loggin
+By default we don’t log anything. If you want to debug your application and see what’s going on within Channels then you can assign a global logging function.
+The `_log` value should be set with a function with the following signature:
+
+```swift
+$Pusher._log = funcref(self, "logger")
+  
+func logger(message):
+	print(message)
+```
+
 ## Connection
 A connection to Pusher Channels can be established by invoking the `connect_app` method of your pusher node:
 ```swift
