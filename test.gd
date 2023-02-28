@@ -1,12 +1,29 @@
 extends Node2D
 
+var channel
+var on_event = funcref(self, "handle_event")
+var on_connected =  funcref(self, "handle_connected")
+var on_subscription = funcref(self, "handle_subscription")
 
-# Declare member variables here. Examples:
-# var a = 2
-# var b = "text"
-
-
-# Called when the node enters the scene tree for the first time.
 func _ready():
-	var c = {}
-	# $Pusher.connect_app("", { "cluster": ""})
+	$Pusher._log = funcref(self, "logger")
+	$Pusher.connection.bind(PusherState.CONNECTED, on_connected)
+	# $Pusher.connect_app()
+	
+func logger(message):
+	print(message)
+	
+func handle_subscription(_data):
+	channel.bind("client-hello", on_event)
+	channel.trigger("client-hello", { "message": "ok!!!" })
+
+func handle_event(data):
+	print("data: ", data)
+	# channel.unbind("client-hello", handler_event)
+	# channel.unsubscribe()
+	
+func handle_connected(_data):
+	channel = $Pusher.subscribe("channel")
+	channel.bind(PusherEvent.SUBSCRIPTION_SUCCEEDED, on_subscription)
+	
+	

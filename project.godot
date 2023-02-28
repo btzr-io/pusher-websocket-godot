@@ -15,14 +15,29 @@ _global_script_classes=[ {
 "path": "res://addons/pusher/src/Binder.gd"
 }, {
 "base": "Object",
-"class": "PusherAPI",
+"class": "PusherAuth",
 "language": "GDScript",
-"path": "res://addons/pusher/src/PusherAPI.gd"
+"path": "res://addons/pusher/src/PusherAuth.gd"
 }, {
 "base": "Object",
 "class": "PusherChannel",
 "language": "GDScript",
 "path": "res://addons/pusher/src/PusherChannel.gd"
+}, {
+"base": "Object",
+"class": "PusherConnection",
+"language": "GDScript",
+"path": "res://addons/pusher/src/PusherConnection.gd"
+}, {
+"base": "Object",
+"class": "PusherEvent",
+"language": "GDScript",
+"path": "res://addons/pusher/src/PusherEvent.gd"
+}, {
+"base": "Object",
+"class": "PusherState",
+"language": "GDScript",
+"path": "res://addons/pusher/src/PusherState.gd"
 }, {
 "base": "Object",
 "class": "Utils",
@@ -31,8 +46,11 @@ _global_script_classes=[ {
 } ]
 _global_script_class_icons={
 "Binder": "",
-"PusherAPI": "",
+"PusherAuth": "",
 "PusherChannel": "",
+"PusherConnection": "",
+"PusherEvent": "",
+"PusherState": "",
 "Utils": ""
 }
 
@@ -44,7 +62,7 @@ config/icon="res://icon.png"
 
 [editor_plugins]
 
-enabled=PoolStringArray( "res://addons/pusher/plugin.cfg" )
+enabled=PoolStringArray(  )
 
 [gui]
 

@@ -3,9 +3,13 @@ class_name Binder
 
 var event_callbacks = {}
 
-func run_callbacks(event_name, data):
+func clear():
+	event_callbacks = {}
+
+func run_callbacks(event_name, data = null):
 	if not event_name in event_callbacks: return
-	if not event_callbacks[event_name] or event_callbacks[event_name].size(): return
+	if not event_callbacks[event_name] or not event_callbacks[event_name].size(): return
+	
 	for event in event_callbacks[event_name]:
 		if event.is_valid():
 			event.call_func(data)
@@ -21,4 +25,4 @@ func unbind(event_name, event_callback = null):
 		if not event_callback:
 			event_callbacks.erase(event_name)
 		else:
-			event_callbacks[event_name].remove(event_callback)
+			event_callbacks[event_name].erase(event_callback)

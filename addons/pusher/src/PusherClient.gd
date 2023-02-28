@@ -6,21 +6,8 @@ extends Node
 # ----------
 #
 
-#const Utils = preload("Utils.gd")
-#const Binder = preload("Binder.gd")
-#const PusherAPI = preload("PusherAPI.gd")
-#const PusherChannel = preload("PusherChannel.gd")
-
 const DESCRIPTION = "A Pusher Channels client addon for Godot"
 const CONFIGURATION_WARNING_MESSAGE = "To open a connection you must provide your app key and cluster name."
-
-# --------
-# Signals:
-# --------
-
-signal error(error_data)
-signal connected(connection_data)
-signal state_changed(new_connection_state)
 
 # --------------
 # Configuration:
@@ -30,21 +17,25 @@ signal state_changed(new_connection_state)
 export var key = ""
 ## The name of the cluster that you’re using
 export var cluster = ""
+## The app secret key:
+# Warning: Only use this for development and testing
+export var secret = ""
 ## Connect on _ready otherwise use .connect_app
 export var auto_connect = false
 
 # Custom exports
 var properties = []
-## Authenticate on connection_stablished otherwise use signing()
-var auto_signin = false
-## Authentication endpoint
-var auth_endpoint = ""
+var authentication_endpoint = ""
+var authorization_endpoint = ""
 var auth_params = {}
 var auth_headers = {}
 
-var auth_properties = [
-	[ "auto_signin", TYPE_BOOL, auto_signin],
-	[ "auth_endpoint", TYPE_STRING, auth_endpoint],
+var user_auth_properties = [
+	["authentication_endpoint", TYPE_STRING, authentication_endpoint]
+]
+
+var channel_auth_properties = [
+	["authorization_endpoint", TYPE_STRING, authorization_endpoint],
 ]
 
 # -----------
@@ -52,14 +43,20 @@ var auth_properties = [
 # -----------
 
 # Internal properties:
-var pusher
+var user
 var socket_id
-var user_data
-var connection_url
-var connection_state = PusherAPI.STATE.INITIALIZED setget set_connection_state
 var channels = {}
-var authenticated = false
 var binder = Binder.new()
+var connection = PusherConnection.new()
+# Handle authentication / authorization
+var auth = PusherAuth.new(self)
+
+# Logger
+var _log = null
+
+func _logger(message):
+	if _log and _log.is_valid():
+		_log.call_func(message)
 
 func property_can_revert(property):
 	return property in Utils.get_props_names(properties) 
@@ -69,7 +66,8 @@ func property_get_revert(property):
 
 func _get_property_list():
 	properties = []
-	Utils.add_props_group("User Authentication", auth_properties, properties)
+	Utils.add_props_group("User Authentication", user_auth_properties, properties)
+	Utils.add_props_group("Channel Authorization", channel_auth_properties, properties)
 	return properties
 
 func _is_valid():
@@ -82,7 +80,6 @@ func _get_configuration_warning() -> String:
 	if !_is_valid():
 		return CONFIGURATION_WARNING_MESSAGE
 	return ""
-
 
 # ---------------
 # Initialization:
@@ -100,29 +97,21 @@ func _ready():
 
 func _process(_delta):
 	if Engine.editor_hint: return
-	if connection_state == PusherAPI.STATE.INITIALIZED: return
-	if connection_state == PusherAPI.STATE.DISCONNECTED: return
+	if connection.state == PusherState.INITIALIZED: return
+	if connection.state == PusherState.DISCONNECTED: return
 	# Call this in _process or _physics_process. Data transfer, and signals
 	# emission will only happen when calling this function.
-	pusher._client.poll()
+	connection.socket.poll()
 
 # --------
 # Methods:
 # --------
 
 func clear_properties():
-	pusher = null
+	user = null
 	channels = []
 	socket_id = null
-	user_data = null
-	authenticated = false
-	connection_url = null
 	binder.clear()
-
-func set_connection_state(value):
-	connection_state = value
-	emit_signal("state_change")
-	print_debug("Connection state changed to: ", value)
 
 func configure(new_key = null, new_config = null):
 	if not new_key and not new_config: return
@@ -139,137 +128,140 @@ func configure(new_key = null, new_config = null):
 		if new_config["userAuthentication"].has("headers"):
 			auth_headers = new_config["userAuthentication"]["headers"]
 		if new_config["userAuthentication"].has("endpoint"):
-			auth_endpoint = new_config["userAuthentication"]["endpoint"]
+			authentication_endpoint = new_config["userAuthentication"]["endpoint"]
 
 func connect_app(new_key = null, config = null):
 	# Runtime configuration
 	if new_key or config:
 		configure(new_key, config)
-	# Creare websocket client	
-	pusher = PusherAPI.new({"key": key, "cluster": cluster})
-	# Expose connection url
-	connection_url = pusher._websocket_url
 	# Connect base signals to get notified of connection open, close, and errors.
-	pusher._client.connect("connection_closed", self, "_closed")
-	pusher._client.connect("connection_error", self, "_connection_error")
-	pusher._client.connect("data_received", self, "_data")
+	connection.socket.connect("connection_closed", self, "_closed")
+	connection.socket.connect("connection_error", self, "_connection_error")
+	connection.socket.connect("data_received", self, "_data")
 	# Update connection state
-	connection_state = PusherAPI.STATE.CONNECTING
-	 # Initiate connection to the given URL.
-	var err = pusher.init_connection()
+	connection.state = PusherState.CONNECTING
+	 # Open connection.
+	var err = connection.start({"key": key, "cluster": cluster})
 	if err != OK:
-		connection_state = PusherAPI.STATE.UNAVAILABLE
+		connection.state = PusherState.UNAVAILABLE
 		_error({ message = "Unable to connect" })
 		set_process(false)
 	else:
-		signin()
 		set_process(true)
 
 func disconnect_app():
-	pusher._client.get_peer(1).close()
-
-func signin(params={}, headers={}):
-	if authenticated: return
-	if !auth_endpoint: return
-	Utils.post_request(self, "_auth_requested", auth_endpoint, params, headers)
+	connection.socket.get_peer(1).close()
 
 func bind(event_name, event_callback):
 	binder.bind(event_name, event_callback)
 
-func unbind(event_name, event_callback):
+func unbind(event_name, event_callback = null):
 	binder.unbind(event_name, event_callback)
 
 func trigger(event, data = {}):
-	pusher.send_message({ "event": event, "data": data })
-	print_debug("Protocol event sent: ", event)
+	connection.send_message({ "event": event, "data": data })
+	_logger("Event sent -> " + event)
 
+			
 func subscribe(channel_name):
+	var auth_data = {}
+	var subscription = { "channel": channel_name }
 	if not channel_name in channels:
-		trigger(PusherAPI.SUBSCRIBE, { "channel": channel_name })
+		# Subscription requires authorization:
+		if Utils.has_prefix(channel_name, ["private-", "presence-"]):
+			if secret:
+				auth_data = auth.authorize_channel_locally(channel_name)
+				if "auth" in auth_data:
+					subscription.merge(auth_data)
+					trigger(PusherEvent.SUBSCRIBE, subscription)
+					
+			elif authorization_endpoint:
+				var error = auth.authorize_channel(channel_name)
+				if error:
+					_error({ "message": "Failed authorization <- " + authorization_endpoint })
+		else:
+			# Subscribe to public channel
+			trigger(PusherEvent.SUBSCRIBE, subscription)
 		channels[channel_name] = PusherChannel.new(channel_name, self)
+	if channel_name in channels:
 		return channels[channel_name]
 
 func unsubscribe(channel_name):
 	if channel_name in channels:
-		trigger(PusherAPI.UNSUBSCRIBE, { "channel": channel_name })
-		channels.remove(channel_name)
+		trigger(PusherEvent.UNSUBSCRIBE, { "channel": channel_name })
+		channels.erase(channel_name)
 
 # ---------------
 # Event handlers:
 # ---------------
  
 func _signed(data):
-	user_data = data
-	authenticated = true
-	print_debug("Authentication ready: ", data)
+	_logger("Authentication ready: " +  str(data) )
 
 func _closed(was_clean = false):
 	# was_clean will tell you if the disconnection was correctly notified
 	# by the remote peer before closing the socket.
-	connection_state = PusherAPI.STATE.DISCONNECTED
+	connection.state = PusherState.DISCONNECTED
 	clear_properties()
 	set_process(false)
-	print_debug("Closed, clean: ", was_clean)
+	_logger("Closed, clean: " + str(was_clean))
 
 func _connected(data):
 	socket_id = data["socket_id"]
-	connection_state = PusherAPI.STATE.CONNECTED
-	emit_signal("connected", data)
-	print_debug("Connected: ", socket_id)
+	connection.state = PusherState.CONNECTED
+	_logger("Connection established: " + JSON.print(data))
 
 func _connection_error():
-	connection_state = PusherAPI.STATE.UNAVAILABLE
+	connection.state = PusherState.UNAVAILABLE
 	_error({ message = "Unable to connect" })
 
 func _error(data):
-	emit_signal("error")
 	push_error("Pusher error: " + data.message)
 	
 func _subscribed(channel, data):
-	print_debug("Subscribed to channel: ", channel)
+	_logger("Subscribed to channel: " + channel)
 
-func _internal_subscribed(channel):
-	print_debug("Subscribed to channel: ", channel)
-
-func _auth_requested(result: int, response_code: int, headers, body):	
-	if result != HTTPRequest.RESULT_SUCCESS or response_code > 200:
-		return push_error("Authentication request failed: " + auth_endpoint)
-	if body:
-		trigger(PusherAPI.SIGNIN, { "auth": "", "user_data": {} })
-	
+		
 func _data():
 	var data
 	var event
 	var channel
-	var message = pusher.get_message()
-
+	var message = connection.get_message()
+	var connection_state = connection.state 
+	
 	if message and message.has("data"):
 		data = message["data"]
 
 	if message and message.has("event"):
 		event = message["event"]
-		print_debug("Protocol event received: ", event)
-
+		if Utils.has_prefix(event, ["pusher:", "pusher_internal:"]):
+			event = event.replace("pusher_internal:", "pusher:")
+		
 	if message and message.has("channel"):
 		channel = message["channel"]
 	
 	if not event: return
 	
+	# Log pusher protocol events:
+	_logger("Event received <- " + event)
+		
 	match event:
-		PusherAPI.ERROR:
+		PusherEvent.ERROR:
 			_error(data)
-		PusherAPI.SIGNIN_SUCCESS:
+		PusherEvent.SIGNIN_SUCCESS:
 			_signed(data)
-		PusherAPI.CONNECTION_ESTABLISHED:
+		PusherEvent.CONNECTION_ESTABLISHED:
 			_connected(data)
-		PusherAPI.SUBSCRIPTION_SUCCEEDED:
+		PusherEvent.SUBSCRIPTION_SUCCEEDED:
 			_subscribed(channel, data)
-		PusherAPI.INTERNAL_SUBSCRIPTION_SUCCEEDED:
-			_internal_subscribed(channel)
-		_:
-			if not channel:
-				# Run protocol binded events
-				binder.run_callbacks(event, data)
-			else:
-				# Run channel binded events
-				channels[channels].run_callbacks(event, data)
+	
+	if connection_state != connection.state:
+		# Run binded connection events:
+		connection.binder.run_callbacks(connection.state)
+
+	# Run binded events on all channels
+	binder.run_callbacks(event, data)
+	
+	if channel in channels:
+		# Run channel binded events
+		channels[channel].binder.run_callbacks(event, data)
