@@ -51,13 +51,13 @@ func event_handler(data):
   
 var callback = funcref(self, "event_handler")
 
-$Pusher.bind("pusher:connection_established", callback);
+$Pusher.connection.bind("connected", callback);
 
 ```
 
 ### Subscribe to a channel
 ```swift
-$Pusher.subscribe("channel-name")
+var channel = $Pusher.subscribe("channel-name")
 ```
 
 
