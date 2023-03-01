@@ -184,6 +184,12 @@ func channel(channel_name):
 	else:
 		push_warning(WARNING_MESSAGE_INVALID_CHANNEL.format([channel_name]))
 
+func signin():
+	if secret:
+		auth.authenticate_user_locally()
+	else:
+		auth.authenticate_user()
+		
 func bind(event_name, event_callback):
 	binder.bind(event_name, event_callback)
 
@@ -228,7 +234,7 @@ func unsubscribe(channel_name):
 # ---------------
  
 func _signed(data):
-	_logger("Authentication ready: " +  str(data) )
+	_logger("Authentication ready: " +  JSON.print(data) )
 
 func _closed(was_clean = false):
 	if not _cache_connection_error:
@@ -247,9 +253,9 @@ func _connection_error():
 	reconnect(RECONNECT.DELAY)
 	
 func _error(data):
-	if "message" in data:
+	if "message" in data and data["message"]:
 		push_error("Pusher error: " + data["message"])
-	if "code" in data:
+	if "code" in data and data["code"]:
 		# Cache current error
 		_cache_connection_error = data
 		if (data["code"] >= 4000) and (data["code"] <= 4099):

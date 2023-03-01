@@ -3,6 +3,8 @@ class_name PusherAuth
 
 var client
 
+var USER_DATA = { "id": Utils.uuid() }
+
 func _init(auth_client):
 	client = auth_client
 
@@ -21,7 +23,19 @@ static func get_presence_auth_token(key, secret, socket_id, channel, user_data):
 	return "{0}:{1}".format([key, signature])
 
 # Local authorization:
-# Warning: Only use this for development and testing
+func authenticate_user_locally():
+	if not client.secret: return {}
+	var auth = get_user_auth_token(
+		client.key,
+		client.secret,
+		client.socket_id,
+		USER_DATA
+	)
+	var auth_data = { "auth": auth, "user_data": JSON.print(USER_DATA) }
+	client.trigger(PusherEvent.SIGNIN, auth_data)
+
+
+# Local authorization:
 func authorize_channel_locally(channel_name):
 	if not client.secret: return {}
 	# Generate private channel authorization
@@ -36,15 +50,15 @@ func authorize_channel_locally(channel_name):
 	# Generate presence channel authorization
 	if channel_name.begins_with("presence-"):
 		# Generate random user data
-		var user_data = {"user_id": Utils.uuid()}
+		
 		var auth = get_presence_auth_token(
 				client.key,
 				client.secret,
 				client.socket_id,
 				channel_name,
-				user_data
+				USER_DATA
 		)
-		return { "auth": auth, "channel_data": JSON.print(user_data) }
+		return { "auth": auth, "channel_data": JSON.print(USER_DATA) }
 	# Failed authorization
 	return {}
 
@@ -65,6 +79,32 @@ func authorize_channel(channel_name):
 		auth_body
 	)
 
+func autenticate_user():
+	# Both channel types require socket_id and channel_name:
+	var auth_body = {
+		"scoket_id": client.socket_id,
+	}
+	# Presence channels requires additional data:
+	# if channel_name.begins_with("presence-"): 
+	# Remote autorization:
+	return Utils.post_request(
+		self,
+		client.authentication_endpoint,
+		"_authorization",
+		auth_body
+	)
+
+func _authentication(error, code, headers, body, params):
+	if error or code != 200 or not body or not params or not "channel_name" in params:
+		client._error({ "message": "Failed authentication <- " + client.autentication_endpoint })
+	else:
+		var auth_data = JSON.parse(body.get_string_from_utf8())
+		if auth_data.error:
+			client._error({ "message": "Failed authentication <- " + client.authentication_endpoint })
+		elif auth_data.result:
+			client.trigger(PusherEvent.SIGNIN, auth_data.result)
+
+
 func _authorization(error, code, headers, body, params):
 	if error or code != 200 or not body or not params or not "channel_name" in params:
 		client._error({ "message": "Failed authorization <- " + client.authorization_endpoint })
@@ -75,4 +115,4 @@ func _authorization(error, code, headers, body, params):
 		elif auth_data.result:
 			var subscription = { "channel": params["channel_name"] }
 			subscription.merge(auth_data.result)
-			client.trigger(PusherConnection.SUBSCRIBE, subscription)
+			client.trigger(PusherEvent.SUBSCRIBE, subscription)
