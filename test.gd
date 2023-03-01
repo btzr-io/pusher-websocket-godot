@@ -11,7 +11,7 @@ var on_subscription = funcref(self, "handle_subscription")
 func _ready():
 	$Pusher._log = on_log
 	$Pusher.connection.bind(PusherState.CONNECTED, on_connected)
-	# $Pusher.connect_app()
+	$Pusher.connect_app()
 	
 func logger(message):
 	print(message)

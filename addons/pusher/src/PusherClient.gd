@@ -114,6 +114,8 @@ func _process(_delta):
 	if connection.state == PusherState.FAILED: return
 	# No connection is open yet:
 	if connection.state == PusherState.INITIALIZED: return
+	# Server or client diconnected:
+	if connection.state == PusherState.DISCONNECTED: return
 	# Call this in _process or _physics_process. Data transfer, and signals
 	# emission will only happen when calling this function.
 	connection.socket.poll()
@@ -242,7 +244,6 @@ func _connected(data):
 
 func _connection_error():
 	connection.state = PusherState.UNAVAILABLE
-	_cache_connection_error = { "code": 4000, "message": "Network disconnected" }
 	reconnect(RECONNECT.DELAY)
 	
 func _error(data):
