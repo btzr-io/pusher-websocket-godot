@@ -44,7 +44,7 @@ See full guide: [Enabling a plugin](https://docs.godotengine.org/en/stable/tutor
 
 ### Get your Free API keys
 Create an [account](https://dashboard.pusher.com/accounts/sign_up) and then create a Channels app. 
-See [guide](https://pusher.com/docs/channels/getting_started/javascript/?ref=sdk-quick-starts#get-your-free-api-keys)
+See full [guide](https://pusher.com/docs/channels/getting_started/javascript/?ref=sdk-quick-starts#get-your-free-api-keys)
 
 
 ### Open a connection
