@@ -86,6 +86,24 @@ var event_callback = funcref(self, "event_handler")
 channel.bind("my-event", event_callback);
 ```
 
+### Triggering client events
+You can only trigger a client event once a subscription has been successfully registered:
+```js
+
+var channel = $Pusher.subscribe("channel-name")
+var on_subscribed = func_ref(self, "handle_subscription")
+
+channel.bind(PusherEvent.SUBSCRIPTION_SUCCEEDED, on_subscribed);
+```
+
+```swift
+func handle_subscription():
+	channel.trigger("client-someEventName", { "message": "hello!" })
+```
+See full [documentation](https://pusher.com/docs/channels/using_channels/events/#triggering-client-events)
+
+
+
 ## Configuration
 
 It is possible to set and update the client configuration through the `configure` method:
