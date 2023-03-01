@@ -44,11 +44,13 @@ func start(connection_options):
 		socket.get_peer(1).set_write_mode(WebSocketPeer.WRITE_MODE_TEXT)
 		return socket.connect_to_url(url)
 
-func bind(connection_state, callback):
-	binder.bind(connection_state, callback)
+func bind(event_name, callback):
+	var formated_name = PusherEvent.get_name(event_name)
+	binder.bind(formated_name, callback)
 
-func unbind(connection_state, callback = null):
-	binder.unbind(connection_state, callback)
+func unbind(event_name, callback = null):
+	var formated_name = PusherEvent.get_name(event_name)
+	binder.unbind(formated_name, callback)
 
 func send_message(data):
 	var raw_data = data

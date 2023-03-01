@@ -7,7 +7,8 @@ extends Node
 #
 
 const DESCRIPTION = "A Pusher Channels client addon for Godot"
-const CONFIGURATION_WARNING_MESSAGE = "To open a connection you must provide your app key and cluster name."
+const WARNING_MESSAGE_INVALID_CHANNEL = 'You are not subscribed to "{0}" channel: call .subscribe("{0}") first'
+const WARNING_MESSAGE_CONFIGURATION = "To open a connection you must provide your app key and cluster name."
 
 # --------------
 # Configuration:
@@ -78,7 +79,7 @@ func _enter_tree():
 
 func _get_configuration_warning() -> String:
 	if !_is_valid():
-		return CONFIGURATION_WARNING_MESSAGE
+		return WARNING_MESSAGE_CONFIGURATION
 	return ""
 
 # ---------------
@@ -89,7 +90,7 @@ func _ready():
 	if Engine.editor_hint: return
 	
 	if not _is_valid():
-		push_warning(CONFIGURATION_WARNING_MESSAGE)
+		push_warning(WARNING_MESSAGE_CONFIGURATION)
 		return
 	
 	if auto_connect:
@@ -151,6 +152,12 @@ func connect_app(new_key = null, config = null):
 
 func disconnect_app():
 	connection.socket.get_peer(1).close()
+
+func channel(channel_name):
+	if channel_name in channels:
+		return channels[channel_name]
+	else:
+		push_warning(WARNING_MESSAGE_INVALID_CHANNEL.format([channel_name]))
 
 func bind(event_name, event_callback):
 	binder.bind(event_name, event_callback)
@@ -234,7 +241,7 @@ func _data():
 
 	if message and message.has("event"):
 		event = message["event"]
-		if Utils.has_prefix(event, ["pusher:", "pusher_internal:"]):
+		if PusherEvent.is_protocol_event(event):
 			event = event.replace("pusher_internal:", "pusher:")
 		
 	if message and message.has("channel"):
@@ -255,8 +262,14 @@ func _data():
 		PusherEvent.SUBSCRIPTION_SUCCEEDED:
 			_subscribed(channel, data)
 	
+	# Run binded connection protocol events:
+	if PusherEvent.is_protocol_event(event):
+		# Remove protocol schema
+		var connection_event = PusherEvent.get_name(event)
+		connection.binder.run_callbacks(connection_event)
+		
+	# Run binded connection events:
 	if connection_state != connection.state:
-		# Run binded connection events:
 		connection.binder.run_callbacks(connection.state)
 
 	# Run binded events on all channels

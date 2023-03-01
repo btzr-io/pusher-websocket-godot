@@ -1,12 +1,13 @@
 extends Node2D
 
 var channel
+var on_log = funcref(self, "logger")
 var on_event = funcref(self, "handle_event")
 var on_connected =  funcref(self, "handle_connected")
 var on_subscription = funcref(self, "handle_subscription")
 
 func _ready():
-	$Pusher._log = funcref(self, "logger")
+	$Pusher._log = on_log
 	$Pusher.connection.bind(PusherState.CONNECTED, on_connected)
 	# $Pusher.connect_app()
 	
