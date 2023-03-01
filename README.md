@@ -17,6 +17,8 @@ A [Godot](https://github.com/godotengine/godot) plugin for creating real-time in
     - [Loggin](#loggin)
 - [Connection](#configuration)
   - [Disconnect](#disconnect)
+  - [connection-states](#connection-states)
+    - [Available states](#available-states)
 - [Channels](#channels)
   - [Subscribing to channels](#subscribing-to-channels)
   - [Unsubscribing from channels](#unsubscribing-from-channels)
@@ -140,15 +142,20 @@ func logger(message):
 
 ## Connection
 A connection to Pusher Channels can be established by invoking the `connect_app` method of your pusher node:
+
 ```swift
 $Pusher.connect_app()
 ```
+
 A connection with custom configuration can be established by passing the same params from [configure](#runtime) method:
+
 ```swift
 $Pusher.connect_app(APP_KEY, { "cluster": APP_CLUSTER })
 ```
+
 ### Disconnect
 You may disconnect by invoking the `disconnect_app` method:
+
 ```swift
 $Pusher.disconnect_app()
 ```
@@ -157,7 +164,7 @@ $Pusher.disconnect_app()
 You can monitor the state of the connection so that you can notify users about expected behaviour.
  See guide: [connection states API](https://pusher.com/docs/channels/using_channels/connection/#connection-states)
 
-###  Available states
+####  Available states
 You can access the current state as:
 
 ```js
@@ -165,14 +172,18 @@ $Pusher.connection.state
 ```
 
  And bind to a state change using the connection `bind` method: 
+ 
  ```swift
 $Pusher.connection.bind("connected", callback)
  ```
 All state names are available as constants trough the `PusherState` class:
+
 ```js
 // PusherState.CONNECTED == "connected"
 $Pusher.connection.bind(PusherState.CONNECTED, callback)
 ```
+
+See full list: [Available connection states](https://pusher.com/docs/channels/using_channels/connection/#available-states)
 
 ## Channels
 
