@@ -38,27 +38,30 @@ func authenticate_user_locally():
 # Local authorization:
 func authorize_channel_locally(channel_name):
 	if not client.secret: return {}
+	var auth = get_private_auth_token(
+		client.key,
+		client.secret,
+		client.socket_id,
+		channel_name
+	)
 	# Generate private channel authorization
 	if channel_name.begins_with("private-"):
-			var auth = get_private_auth_token(
-				client.key,
-				client.secret,
-				client.socket_id,
-				channel_name
-			)
-			return { "auth": auth }
+		return { "auth": auth }
 	# Generate presence channel authorization
 	if channel_name.begins_with("presence-"):
-		# Generate random user data
-		
-		var auth = get_presence_auth_token(
-				client.key,
-				client.secret,
-				client.socket_id,
-				channel_name,
-				USER_DATA
+		# User is already authenticated
+		if client.user and client.user.has("id"):
+			return { "auth": auth }
+		# Authoriza channel with user_data
+		var channel_data = { "user_id": USER_DATA["id"] }
+		auth = get_presence_auth_token(
+			client.key,
+			client.secret,
+			client.socket_id,
+			channel_name,
+			channel_data
 		)
-		return { "auth": auth, "channel_data": JSON.print(USER_DATA) }
+		return { "auth": auth, "channel_data":  JSON.print(channel_data) }
 	# Failed authorization
 	return {}
 
@@ -79,7 +82,7 @@ func authorize_channel(channel_name):
 		auth_body
 	)
 
-func autenticate_user():
+func authenticate_user():
 	# Both channel types require socket_id and channel_name:
 	var auth_body = {
 		"scoket_id": client.socket_id,

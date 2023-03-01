@@ -234,6 +234,7 @@ func unsubscribe(channel_name):
 # ---------------
  
 func _signed(data):
+	user = data
 	_logger("Authentication ready: " +  JSON.print(data) )
 
 func _closed(was_clean = false):
@@ -267,10 +268,10 @@ func _error(data):
 		elif (data["code"] >= 4200) and (data["code"] <= 4299):
 			# The connection SHOULD be re-established immediately
 			reconnect(RECONNECT.IMMEDIATELY)
+			
 func _subscribed(channel, data):
 	_logger("Subscribed to channel: " + channel)
-
-		
+	
 func _data():
 	var data
 	var event
@@ -279,7 +280,9 @@ func _data():
 	
 	if message and message.has("data"):
 		data = message["data"]
-
+		if data.has("user_data"):
+			data = JSON.parse(data["user_data"]).result
+			
 	if message and message.has("event"):
 		event = message["event"]
 		if PusherEvent.is_protocol_event(event):
