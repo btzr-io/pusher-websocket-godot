@@ -42,23 +42,40 @@ See full guide: [Enabling a plugin](https://docs.godotengine.org/en/stable/tutor
 $Pusher.connect_app( APP_KEY, { "cluster": APP_CLUSTER } )
 ```
 
-### Listen for events:
+### Listen for connection events:
 ```swift
-func event_handler(data):
-  print("Event received")
+func connected_handler(data):
+  print("Hello!")
   
-var callback = funcref(self, "event_handler")
+ func error_handler(data):
+  print("Oh No!")
+  
+var error_callback = funcref(self, "error_handler")  
+var connected_callback = funcref(self, "connected_handler")
 
-$Pusher.connection.bind("connected", callback);
+$Pusher.connection.bind("error", error_callback);
+$Pusher.connection.bind("connected", connected_callback);
 
 ```
 
 ### Subscribe to a channel
+
+Before your app can receive any events from a channel, you need to subscribe to the channel. Do this with the `subscribe` method:
 ```swift
 var channel = $Pusher.subscribe("channel-name")
 ```
 
+### Listen for events on your channel
+Every published event has an “event name”. For your app to do something when it receives an event called "my-event", your web app must first “bind” a function to this event name. Do this using the channel’s bind method:
 
+```swift 
+func event_handler(data):
+  print(data)
+ 
+var event_callback = funcref(self, "event_handler")
+
+channel.bind("my-event", event_callback);
+```
 
 ## Configuration
 
