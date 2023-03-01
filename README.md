@@ -6,8 +6,9 @@ A [Godot](https://github.com/godotengine/godot) plugin for creating real-time in
 - [Installation](#installation)
 - [Quick start](#quick-start)
   - [Open a connection](#open-a-connection)
-  - [Listen for events](#listen-for-events)
+  - [Listen for connection events](#listen-for-connection-events)
   - [Subscribe to a channel](#subscribe-to-a-channel)
+   - [Listen for events on your channel](#listen-for-events-on-your-channel)
 - [Configuration](#configuration)
     - [Options](#options)
        - [UserAuthentication](#userauthentication)
@@ -35,6 +36,9 @@ See full guide: [Installing a plugin](https://docs.godotengine.org/en/stable/tut
 Enable the plugin and add a `Pusher` node to your main scene.
 
 See full guide: [Enabling a plugin](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html#enabling-a-plugin)
+
+### Get your Free API keys
+Create an [account](https://dashboard.pusher.com/accounts/sign_up) and then create a Channels app. To get API keys, from the Pusher Dashboard, navigate to App Keys. Copy your `app_id`, `key`, `secret`, and `cluster`.
 
 
 ### Open a connection
