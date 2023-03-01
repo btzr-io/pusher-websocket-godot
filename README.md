@@ -5,6 +5,7 @@ A [Godot](https://github.com/godotengine/godot) plugin for creating real-time in
 ## Table of Contents
 - [Installation](#installation)
 - [Quick start](#quick-start)
+  - [Activation](#activation)
   - [Open a connection](#open-a-connection)
   - [Listen for connection events](#listen-for-connection-events)
   - [Subscribe to a channel](#subscribe-to-a-channel)
@@ -33,12 +34,14 @@ See full guide: [Installing a plugin](https://docs.godotengine.org/en/stable/tut
 
 
 ## Quick start
+### Activation
 Enable the plugin and add a `Pusher` node to your main scene.
 
 See full guide: [Enabling a plugin](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html#enabling-a-plugin)
 
 ### Get your Free API keys
-Create an [account](https://dashboard.pusher.com/accounts/sign_up) and then create a Channels app. To get API keys, from the Pusher Dashboard, navigate to App Keys. Copy your `app_id`, `key`, `secret`, and `cluster`.
+Create an [account](https://dashboard.pusher.com/accounts/sign_up) and then create a Channels app. 
+See [guide](https://pusher.com/docs/channels/getting_started/javascript/?ref=sdk-quick-starts#get-your-free-api-keys)
 
 
 ### Open a connection
@@ -149,6 +152,28 @@ You may disconnect by invoking the `disconnect_app` method:
 ```swift
 $Pusher.disconnect_app()
 ```
+
+### Connection States
+You can monitor the state of the connection so that you can notify users about expected behaviour.
+ See guide: [connection states API](https://pusher.com/docs/channels/using_channels/connection/#connection-states)
+
+###  Available states
+You can access the current state as:
+
+```js
+$Pusher.connection.state
+```
+
+ And bind to a state change using the connection `bind` method: 
+ ```swift
+$Pusher.connection.bind("connected", callback)
+ ```
+All state names are available as constants trough the `PusherState` class:
+```js
+// PusherState.CONNECTED == "connected"
+$Pusher.connection.bind(PusherState.CONNECTED, callback)
+```
+
 ## Channels
 
 ### Subscribing to channels
@@ -168,9 +193,6 @@ If a channel has been subscribed to already it is possible to access channels by
 ```swift
 var channel = $Pusher.channel("channel-name")
 ```
-
-
-
 
 ## Binding to events
 
