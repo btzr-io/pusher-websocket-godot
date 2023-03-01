@@ -12,7 +12,11 @@ static func hmac_hex_digest(key, format_string, format_params):
 	var message = format_string.format(format_params)
 	var token = crypto.hmac_digest(HashingContext.HASH_SHA256, key.to_utf8(), message.to_utf8())
 	return token.hex_encode()
-	
+
+static func connect_signal(context, signal_name, target, method):
+	if not context.is_connected(signal_name, target, method):
+		context.connect(signal_name, target, method)
+
 static func get_props_names(props):
 	var names = []
 	for prop in props:
@@ -46,7 +50,7 @@ static func parse_headers(headers):
 
 static func get_root():
 	return Engine.get_main_loop().get_root()
-
+	
 static func post_request(context, endpoint, callback, params = {}, headers = {}):
 	var body = to_json(params)
 	var http_request = HTTPRequest.new()

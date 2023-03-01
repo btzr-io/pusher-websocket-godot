@@ -13,7 +13,7 @@ const REQUIRED_PARAMS = {"key": "", "cluster": ""}
 
 var url : String
 var options : Dictionary
-var state = PusherState.INITIALIZED setget set_connection_state
+var state = PusherState.INITIALIZED
 var binder = Binder.new()
 var socket = WebSocketClient.new()
 
@@ -21,8 +21,6 @@ var socket = WebSocketClient.new()
 # Methods:
 # --------
 	
-func set_connection_state(value):
-	state = value
 
 func _create_url():
 	return FORMAT_URL.format({

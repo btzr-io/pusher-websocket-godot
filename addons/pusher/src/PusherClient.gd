@@ -5,10 +5,12 @@ extends Node
 # Constants:
 # ----------
 #
-
 const DESCRIPTION = "A Pusher Channels client addon for Godot"
 const WARNING_MESSAGE_INVALID_CHANNEL = 'You are not subscribed to "{0}" channel: call .subscribe("{0}") first'
 const WARNING_MESSAGE_CONFIGURATION = "To open a connection you must provide your app key and cluster name."
+
+enum RECONNECT { DELAY, IMMEDIATELY }
+const RECONNECTION_DELAY = 15.0 # seconds
 
 # --------------
 # Configuration:
@@ -51,6 +53,10 @@ var binder = Binder.new()
 var connection = PusherConnection.new()
 # Handle authentication / authorization
 var auth = PusherAuth.new(self)
+
+# Cache data
+var _cache_connection_error
+var _cache_connection_state = connection.state
 
 # Logger
 var _log = null
@@ -96,14 +102,22 @@ func _ready():
 	if auto_connect:
 		connect_app()
 
+
 func _process(_delta):
 	if Engine.editor_hint: return
+		# Alert connection state changes:
+	if _cache_connection_state != connection.state:
+		_cache_connection_state = connection.state
+		_logger("Connection state changed: " + connection.state)
+		connection.binder.run_callbacks(connection.state)
+	# Can't open connection
+	if connection.state == PusherState.FAILED: return
+	# No connection is open yet:
 	if connection.state == PusherState.INITIALIZED: return
-	if connection.state == PusherState.DISCONNECTED: return
 	# Call this in _process or _physics_process. Data transfer, and signals
 	# emission will only happen when calling this function.
 	connection.socket.poll()
-
+	
 # --------
 # Methods:
 # --------
@@ -113,6 +127,7 @@ func clear_properties():
 	channels = []
 	socket_id = null
 	binder.clear()
+	connection = PusherConnection.new()
 
 func configure(new_key = null, new_config = null):
 	if not new_key and not new_config: return
@@ -132,26 +147,34 @@ func configure(new_key = null, new_config = null):
 			authentication_endpoint = new_config["userAuthentication"]["endpoint"]
 
 func connect_app(new_key = null, config = null):
+	if connection.state == PusherState.CONNECTING: return
 	# Runtime configuration
 	if new_key or config:
 		configure(new_key, config)
 	# Connect base signals to get notified of connection open, close, and errors.
-	connection.socket.connect("connection_closed", self, "_closed")
-	connection.socket.connect("connection_error", self, "_connection_error")
-	connection.socket.connect("data_received", self, "_data")
+	Utils.connect_signal(connection.socket, "data_received", self,  "_data")
+	Utils.connect_signal(connection.socket, "connection_closed", self, "_closed")
+	Utils.connect_signal(connection.socket, "connection_error", self, "_connection_error")
+
 	# Update connection state
 	connection.state = PusherState.CONNECTING
 	 # Open connection.
 	var err = connection.start({"key": key, "cluster": cluster})
 	if err != OK:
-		connection.state = PusherState.UNAVAILABLE
-		_error({ message = "Unable to connect" })
-		set_process(false)
-	else:
-		set_process(true)
+		_connection_error()
 
 func disconnect_app():
-	connection.socket.get_peer(1).close()
+	_cache_connection_error = null
+	connection.socket.disconnect_from_host()
+
+func reconnect(mode):
+	if mode == RECONNECT.IMMEDIATELY:
+		_logger("Retry connection...")
+		connect_app()
+	if mode == RECONNECT.DELAY:
+		yield(get_tree().create_timer(RECONNECTION_DELAY), "timeout")
+		_logger("Retry connection...")
+		connect_app()
 
 func channel(channel_name):
 	if channel_name in channels:
@@ -206,12 +229,11 @@ func _signed(data):
 	_logger("Authentication ready: " +  str(data) )
 
 func _closed(was_clean = false):
-	# was_clean will tell you if the disconnection was correctly notified
-	# by the remote peer before closing the socket.
-	connection.state = PusherState.DISCONNECTED
-	clear_properties()
-	set_process(false)
-	_logger("Closed, clean: " + str(was_clean))
+	if not _cache_connection_error:
+		clear_properties()
+		connection.state = PusherState.DISCONNECTED
+	else:
+		connection.state = PusherState.UNAVAILABLE
 
 func _connected(data):
 	socket_id = data["socket_id"]
@@ -220,11 +242,24 @@ func _connected(data):
 
 func _connection_error():
 	connection.state = PusherState.UNAVAILABLE
-	_error({ message = "Unable to connect" })
-
-func _error(data):
-	push_error("Pusher error: " + data.message)
+	_cache_connection_error = { "code": 4000, "message": "Network disconnected" }
+	reconnect(RECONNECT.DELAY)
 	
+func _error(data):
+	if "message" in data:
+		push_error("Pusher error: " + data["message"])
+	if "code" in data:
+		# Cache current error
+		_cache_connection_error = data
+		if (data["code"] >= 4000) and (data["code"] <= 4099):
+			# The connection SHOULD NOT be re-established unchanged
+			disconnect_app()
+		elif (data["code"] >= 4100) and (data["code"] <= 4199):
+			# The connection SHOULD be re-established after backing off
+			reconnect(RECONNECT.DELAY)
+		elif (data["code"] >= 4200) and (data["code"] <= 4299):
+			# The connection SHOULD be re-established immediately
+			reconnect(RECONNECT.IMMEDIATELY)
 func _subscribed(channel, data):
 	_logger("Subscribed to channel: " + channel)
 
@@ -234,7 +269,6 @@ func _data():
 	var event
 	var channel
 	var message = connection.get_message()
-	var connection_state = connection.state 
 	
 	if message and message.has("data"):
 		data = message["data"]
@@ -267,10 +301,6 @@ func _data():
 		# Remove protocol schema
 		var connection_event = PusherEvent.get_name(event)
 		connection.binder.run_callbacks(connection_event)
-		
-	# Run binded connection events:
-	if connection_state != connection.state:
-		connection.binder.run_callbacks(connection.state)
 
 	# Run binded events on all channels
 	binder.run_callbacks(event, data)

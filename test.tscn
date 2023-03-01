@@ -11,6 +11,5 @@ script = ExtResource( 1 )
 __meta__ = {
 "_editor_description_": "A Pusher Channels client addon for Godot"
 }
-auto_connect = true
 authentication_endpoint = ""
 authorization_endpoint = ""
