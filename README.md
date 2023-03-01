@@ -9,7 +9,8 @@ A [Godot](https://github.com/godotengine/godot) plugin for creating real-time in
   - [Open a connection](#open-a-connection)
   - [Listen for connection events](#listen-for-connection-events)
   - [Subscribe to a channel](#subscribe-to-a-channel)
-   - [Listen for events on your channel](#listen-for-events-on-your-channel)
+  - [Listen for events on your channel](#listen-for-events-on-your-channel)
+  - [Triggering client events](#triggering-client-events)
 - [Configuration](#configuration)
     - [Options](#options)
        - [UserAuthentication](#userauthentication)
@@ -43,7 +44,7 @@ See full guide: [Enabling a plugin](https://docs.godotengine.org/en/stable/tutor
 
 ### Get your Free API keys
 Create an [account](https://dashboard.pusher.com/accounts/sign_up) and then create a Channels app. 
-See [guide](https://pusher.com/docs/channels/getting_started/javascript/?ref=sdk-quick-starts#get-your-free-api-keys)
+See full [guide](https://pusher.com/docs/channels/getting_started/javascript/?ref=sdk-quick-starts#get-your-free-api-keys)
 
 
 ### Open a connection
@@ -85,6 +86,24 @@ var event_callback = funcref(self, "event_handler")
 
 channel.bind("my-event", event_callback);
 ```
+
+### Triggering client events
+You can only trigger a client event once a subscription has been successfully registered:
+```js
+
+var channel = $Pusher.subscribe("channel-name")
+var on_subscribed = func_ref(self, "handle_subscription")
+
+channel.bind(PusherEvent.SUBSCRIPTION_SUCCEEDED, on_subscribed);
+```
+
+```swift
+func handle_subscription():
+	channel.trigger("client-someEventName", { "message": "hello!" })
+```
+See full [documentation](https://pusher.com/docs/channels/using_channels/events/#triggering-client-events)
+
+
 
 ## Configuration
 
