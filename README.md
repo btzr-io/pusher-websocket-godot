@@ -2,6 +2,12 @@
 
 A [Godot](https://github.com/godotengine/godot) plugin for creating real-time interactions with the [Pusher Channels Protocol](https://pusher.com/docs/channels/library_auth_reference/pusher-websockets-protocol/) over a [WebSocket connection](https://docs.godotengine.org/en/stable/tutorials/networking/websocket.html).
 
+
+| Plugin version   | Godot version  | Pusher Channels Protocol version |
+|------------------|----------------|----------------------------------|
+| 1.0              | 3.5.1          | 7.0                              |
+
+
 ## Table of Contents
 - [Installation](#installation)
 - [Quick start](#quick-start)
