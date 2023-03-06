@@ -8,9 +8,11 @@ A [Godot](https://github.com/godotengine/godot) plugin for creating real-time in
   - [Activation](#activation)
   - [Open a connection](#open-a-connection)
   - [Listen for connection events](#listen-for-connection-events)
+  - [User authentication](#user-authentication)
   - [Subscribe to a channel](#subscribe-to-a-channel)
   - [Listen for events on your channel](#listen-for-events-on-your-channel)
   - [Triggering client events](#triggering-client-events)
+  
 - [Configuration](#configuration)
     - [Options](#options)
        - [UserAuthentication](#userauthentication)
@@ -68,6 +70,16 @@ $Pusher.connection.bind("connected", connected_callback);
 
 ```
 
+### User authentication
+
+Authentication happens when you call the signin `method`:
+
+```js
+$Pusher.signin()
+```
+
+See full [documentation](https://pusher.com/docs/channels/using_channels/user-authentication/)
+
 ### Subscribe to a channel
 
 Before your app can receive any events from a channel, you need to subscribe to the channel. Do this with the `subscribe` method:
@@ -76,7 +88,7 @@ var channel = $Pusher.subscribe("channel-name")
 ```
 
 ### Listen for events on your channel
-Every published event has an “event name”. For your app to do something when it receives an event called "my-event", your web app must first “bind” a function to this event name. Do this using the channel’s bind method:
+Every published event has an “event name”. For your app to do something when it receives an event called "my-event", your web app must first “bind” a function to this event name. Do this using the channel’s `bind` method:
 
 ```swift 
 func event_handler(data):
@@ -84,7 +96,7 @@ func event_handler(data):
  
 var event_callback = funcref(self, "event_handler")
 
-channel.bind("my-event", event_callback);
+channel.bind("my-event", event_callback)
 ```
 
 ### Triggering client events
@@ -254,14 +266,14 @@ var callback = funcref(self, "event_handler")
 ### Binding on the channel
 Events can be bound to directly on a channel. This means you will only receive an event if it is sent on that specific channel:
 ```swift
-channel.bind(eventName, callback);
+channel.bind(eventName, callback)
 ```
 
 ### Unbinding from events:
 Use `unbind` to remove a binding of an event:
 
 ```swift
-$Pusher.unbind(EVENT, CALLBACK);
+$Pusher.unbind(EVENT, CALLBACK)
 ```
 
 Params of the `unbind` method:
