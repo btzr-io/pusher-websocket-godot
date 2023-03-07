@@ -62,7 +62,7 @@ config/icon="res://icon.png"
 
 [editor_plugins]
 
-enabled=PoolStringArray(  )
+enabled=PoolStringArray( "res://addons/pusher/plugin.cfg" )
 
 [gui]
 

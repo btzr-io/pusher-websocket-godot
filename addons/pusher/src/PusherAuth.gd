@@ -90,7 +90,6 @@ func authenticate_user():
 	# Presence channels requires additional data:
 	# if channel_name.begins_with("presence-"): 
 	# Remote autorization:
-	print(client.authentication_endpoint)
 	return Utils.post_request(
 		self,
 		client.authentication_endpoint,

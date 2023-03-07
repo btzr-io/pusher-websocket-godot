@@ -18,7 +18,7 @@ func unbind(event_name, event_callback = null):
 func unsubscribe():
 	client.unsubscribe(name)
 	
-func trigger(event_name, data):
+func trigger(event_name, data = {}):
 	if client.connection:
 		 if event_name.begins_with("client-"):
 				if name.begins_with("private-") or name.begins_with("presence-"):
@@ -27,5 +27,5 @@ func trigger(event_name, data):
 						"event": event_name,
 						"channel": name
 					})
-					client._logger("Channel event sent to #" + name + ": "  + event_name)
+					client._logger("Event sent " + event_name + " -> #" + name )
 

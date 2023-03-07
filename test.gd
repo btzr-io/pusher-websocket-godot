@@ -19,9 +19,9 @@ func handle_subscription(_data):
 	channel.bind("client-hello", on_event)
 	channel.trigger("client-hello", { "message": "ok!!!" })
 
-func handle_signin(data):
-	print("User ID: ", data["id"])
+func handle_signin(_data):
 	channel = $Pusher.subscribe("presence-channel-lobby")
+	channel.trigger("data")
 	channel.bind(PusherEvent.SUBSCRIPTION_SUCCEEDED, on_subscription)
 
 func handle_event(data):

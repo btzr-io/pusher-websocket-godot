@@ -6,11 +6,13 @@ extends Node
 # ----------
 #
 const DESCRIPTION = "A Pusher Channels client addon for Godot"
-const WARNING_MESSAGE_INVALID_CHANNEL = 'You are not subscribed to "{0}" channel: call .subscribe("{0}") first'
+const WARNING_MESSAGE_INVALID_CHANNEL = 'You are not subscribed to #"{0}" channel: call .subscribe("{0}") first'
 const WARNING_MESSAGE_CONFIGURATION = "To open a connection you must provide your app key and cluster name."
+const WARNING_MESSAGE_MISSING_ENDPOINT = "To subscribe to a private or presence channel you must provide an authorization enpoint."
+
+const RECONNECTION_DELAY = 15.0 # seconds
 
 enum RECONNECT { DELAY, IMMEDIATELY }
-const RECONNECTION_DELAY = 15.0 # seconds
 
 # --------------
 # Configuration:
@@ -54,7 +56,7 @@ var _log = null
 
 func _logger(message):
 	if _log and _log.is_valid():
-		_log.call_func(message)
+		_log.call_func("PUSHER: " + message)
 
 func _is_valid():
 	return  !auto_connect || key != "" and cluster != ""
@@ -75,7 +77,7 @@ func _ready():
 	if Engine.editor_hint: return
 	
 	if not _is_valid():
-		push_warning(WARNING_MESSAGE_CONFIGURATION)
+		_warning(WARNING_MESSAGE_CONFIGURATION)
 		return
 	
 	if auto_connect:
@@ -160,8 +162,6 @@ func reconnect(mode):
 func channel(channel_name):
 	if channel_name in channels:
 		return channels[channel_name]
-	else:
-		push_warning(WARNING_MESSAGE_INVALID_CHANNEL.format([channel_name]))
 
 func signin():
 	if secret:
@@ -179,7 +179,7 @@ func trigger(event, data = {}):
 	connection.send_message({ "event": event, "data": data })
 	_logger("Event sent -> " + event)
 
-			
+
 func subscribe(channel_name):
 	var auth_data = {}
 	var subscription = { "channel": channel_name }
@@ -196,6 +196,9 @@ func subscribe(channel_name):
 				var error = auth.authorize_channel(channel_name)
 				if error:
 					_error({ "message": "Failed authorization <- " + authorization_endpoint })
+			else:
+				_warning(WARNING_MESSAGE_MISSING_ENDPOINT)
+				_error({ "message": "Failed channel subscription: #" + channel_name })
 		else:
 			# Subscribe to public channel
 			trigger(PusherEvent.SUBSCRIBE, subscription)
@@ -231,10 +234,13 @@ func _connected(data):
 func _connection_error():
 	connection.state = PusherState.UNAVAILABLE
 	reconnect(RECONNECT.DELAY)
+
+func _warning(message):
+	push_warning("PUSHER_WARNING: " + message)
 	
 func _error(data):
 	if "message" in data and data["message"]:
-		push_error("Pusher error: " + data["message"])
+		push_error("PUSHER_ERROR: " + data["message"])
 	if "code" in data and data["code"]:
 		# Cache current error
 		_cache_connection_error = data
@@ -249,7 +255,7 @@ func _error(data):
 			reconnect(RECONNECT.IMMEDIATELY)
 			
 func _subscribed(channel, data):
-	_logger("Subscribed to channel: " + channel)
+	_logger("Subscribed to channel #" + channel)
 	
 func _data():
 	var data
