@@ -17,29 +17,6 @@ static func connect_signal(context, signal_name, target, method):
 	if not context.is_connected(signal_name, target, method):
 		context.connect(signal_name, target, method)
 
-static func get_props_names(props):
-	var names = []
-	for prop in props:
-		if prop.type != TYPE_NIL:
-			names.append(prop.name)
-	return names
-
-static func add_props_group(group_name, new_props, props):
-	# Add group separator
-	props.append({
-		type = TYPE_NIL,
-		name = group_name,
-		usage = PROPERTY_USAGE_CATEGORY
-	})
-	# Add group properties
-	for  prop in new_props:
-		props.append({ name = prop[0], type = prop[1], default = prop[2] })
-
-static func get_default_prop_value(prop_name, props):
-	for prop in props:
-		if prop.name == prop_name:
-			return prop.default
-
 static func parse_headers(headers):
 	var results = []
 	var keys = headers.keys()
@@ -51,7 +28,9 @@ static func parse_headers(headers):
 static func get_root():
 	return Engine.get_main_loop().get_root()
 	
-static func post_request(context, endpoint, callback, params = {}, headers = {}):
+static func post_request(context, endpoint, callback, params = {}, headers = {
+	"Content-Type": "application/json"
+}):
 	var body = to_json(params)
 	var http_request = HTTPRequest.new()
 	get_root().add_child(http_request)

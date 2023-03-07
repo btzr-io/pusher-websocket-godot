@@ -69,7 +69,7 @@ func authorize_channel(channel_name):
 	if not Utils.has_prefix(channel_name, ["private-", "presence-"]): return {}
 	# Both channel types require socket_id and channel_name:
 	var auth_body = {
-		"scoket_id": client.socket_id,
+		"socket_id": str(client.socket_id),
 		"channel_name": channel_name
 	}
 	# Presence channels requires additional data:
@@ -85,21 +85,22 @@ func authorize_channel(channel_name):
 func authenticate_user():
 	# Both channel types require socket_id and channel_name:
 	var auth_body = {
-		"scoket_id": client.socket_id,
+		"socket_id": str(client.socket_id),
 	}
 	# Presence channels requires additional data:
 	# if channel_name.begins_with("presence-"): 
 	# Remote autorization:
+	print(client.authentication_endpoint)
 	return Utils.post_request(
 		self,
 		client.authentication_endpoint,
-		"_authorization",
+		"_authentication",
 		auth_body
 	)
 
 func _authentication(error, code, headers, body, params):
-	if error or code != 200 or not body or not params or not "channel_name" in params:
-		client._error({ "message": "Failed authentication <- " + client.autentication_endpoint })
+	if error or code != 200 or not body:
+		client._error({ "message": "Failed authentication <- " + client.authentication_endpoint })
 	else:
 		var auth_data = JSON.parse(body.get_string_from_utf8())
 		if auth_data.error:

@@ -25,21 +25,12 @@ export var cluster = ""
 export var secret = ""
 ## Connect on _ready otherwise use .connect_app
 export var auto_connect = false
-
 # Custom exports
-var properties = []
-var authentication_endpoint = ""
-var authorization_endpoint = ""
+export var authentication_endpoint = ""
+export var authorization_endpoint = ""
+
 var auth_params = {}
 var auth_headers = {}
-
-var user_auth_properties = [
-	["authentication_endpoint", TYPE_STRING, authentication_endpoint]
-]
-
-var channel_auth_properties = [
-	["authorization_endpoint", TYPE_STRING, authorization_endpoint],
-]
 
 # -----------
 # Properties:
@@ -64,18 +55,6 @@ var _log = null
 func _logger(message):
 	if _log and _log.is_valid():
 		_log.call_func(message)
-
-func property_can_revert(property):
-	return property in Utils.get_props_names(properties) 
-
-func property_get_revert(property):
-	return Utils.get_default_prop_value(property, properties)
-
-func _get_property_list():
-	properties = []
-	Utils.add_props_group("User Authentication", user_auth_properties, properties)
-	Utils.add_props_group("Channel Authorization", channel_auth_properties, properties)
-	return properties
 
 func _is_valid():
 	return  !auto_connect || key != "" and cluster != ""
