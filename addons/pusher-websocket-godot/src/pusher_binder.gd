@@ -1,5 +1,6 @@
-extends Object
-class_name Binder
+extends Node
+
+class_name PusherBinder
 
 var event_callbacks = {}
 
@@ -11,8 +12,8 @@ func run_callbacks(event_name, data = null):
 	if not event_callbacks[event_name] or not event_callbacks[event_name].size(): return
 	
 	for event in event_callbacks[event_name]:
-		if event.is_valid():
-			event.call_func(data)
+		if event is Callable:
+			event.call(data)
 
 func bind(event_name, event_callback):
 	if not event_name in event_callbacks:

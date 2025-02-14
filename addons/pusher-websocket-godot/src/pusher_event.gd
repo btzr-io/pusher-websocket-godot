@@ -20,13 +20,12 @@ const UNSUBSCRIBE = "pusher:unsubscribe"
 const SUBSCRIPTION_ERROR = "pusher:subscription_error"
 const SUBSCRIPTION_COUNT = "pusher:subscription_count"
 const SUBSCRIPTION_SUCCEEDED = "pusher:subscription_succeeded"
-
 const PROTOCOL_SCHEMA = "pusher:"
 
-static func is_protocol_event(event_name):
-	return Utils.has_prefix(event_name, ["pusher:", "pusher_internal:"])
+static func is_protocol_event(event_name : String):
+	return PusherUtils.has_prefix(event_name, ["pusher:", "pusher_internal:"])
 
-static func get_name(event_name):
+static func get_event_name(event_name : String):
 	if event_name.begins_with(PROTOCOL_SCHEMA):
 		return event_name.replace(PROTOCOL_SCHEMA, "")
 	return event_name

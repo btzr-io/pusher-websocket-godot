@@ -13,15 +13,19 @@ const REQUIRED_PARAMS = {"key": "", "cluster": ""}
 
 var url : String
 var options : Dictionary
-var state = PusherState.INITIALIZED
-var binder = Binder.new()
-var socket = WebSocketClient.new()
+var state = -1
+var last_state
+# Our WebSocketClient instance.
+var socket = WebSocketPeer.new()
+
+# Signals:
+signal message_received(message: Variant)
+signal connection_opened
+signal connection_closed
 
 # --------
 # Methods:
 # --------
-	
-
 func _create_url():
 	return FORMAT_URL.format({
 		"KEY": options["key"],
@@ -39,31 +43,46 @@ func start(connection_options):
 		# Create connection url
 		url = _create_url()
 	if socket and url:
-		socket.get_peer(1).set_write_mode(WebSocketPeer.WRITE_MODE_TEXT)
 		return socket.connect_to_url(url)
 
-func bind(event_name, callback):
-	var formated_name = PusherEvent.get_name(event_name)
-	binder.bind(formated_name, callback)
+func poll() -> void:
+	if socket.get_ready_state() != socket.STATE_CLOSED:
+		socket.poll()
 
-func unbind(event_name, callback = null):
-	var formated_name = PusherEvent.get_name(event_name)
-	binder.unbind(formated_name, callback)
+	state = socket.get_ready_state()
+
+	if last_state != state:
+		last_state = state
+		if state == socket.STATE_OPEN:
+			connection_opened.emit()
+		elif state == socket.STATE_CLOSED:
+			connection_closed.emit()
+	while socket.get_ready_state() == socket.STATE_OPEN and socket.get_available_packet_count():
+		var message =  get_message()
+		if message and message is Dictionary:
+			message_received.emit(message)
 
 func send_message(data):
 	var raw_data = data
-	raw_data = JSON.print(raw_data).to_utf8()
-	socket.get_peer(1).put_packet(raw_data)
+	raw_data = JSON.stringify(raw_data).to_utf8_buffer()
+	socket.put_packet(raw_data)
 
 func get_message():
-	var raw_data = socket.get_peer(1).get_packet().get_string_from_utf8()
-	var message = JSON.parse(raw_data).result
+	var raw_data = socket.get_packet().get_string_from_utf8()
+	var message = JSON.new()
+	var error = message.parse(raw_data)
+	
+	if error == OK:
+		message = message.data
+	else:
+		message = error
+		
 	if typeof(message) == TYPE_DICTIONARY:
 		if message:
 			if message.has("data"):
 				var data = message["data"]
 				if typeof(data) == TYPE_STRING:
-					var result = JSON.parse(data).result
+					var result = PusherUtils.parse_json(data)
 					if typeof(result) == TYPE_DICTIONARY:
 						message["data"] = result
 		return message
