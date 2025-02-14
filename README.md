@@ -6,6 +6,7 @@ A [Godot](https://github.com/godotengine/godot) plugin for creating real-time in
 | Plugin version   | Godot version  | Pusher Channels Protocol version |
 |------------------|----------------|----------------------------------|
 | 1.0              | 3.5.1          | 7.0                              |
+| 2.0              | 4.3            | 7.0                              |
 
 
 ## Table of Contents
@@ -46,9 +47,7 @@ See full guide: [Installing a plugin](https://docs.godotengine.org/en/stable/tut
 
 ## Quick start
 ### Activation
-Enable the plugin and add a `Pusher` node to your main scene.
-
-See full guide: [Enabling a plugin](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html#enabling-a-plugin)
+Enable the plugin, see full guide: [Enabling a plugin](https://docs.godotengine.org/en/stable/tutorials/plugins/editor/installing_plugins.html#enabling-a-plugin)
 
 ### Get your Free API keys
 Create an [account](https://dashboard.pusher.com/accounts/sign_up) and then create a Channels app. 
@@ -57,7 +56,7 @@ See full [guide](https://pusher.com/docs/channels/getting_started/javascript/?re
 
 ### Open a connection
 ```swift
-$Pusher.connect_app( APP_KEY, { "cluster": APP_CLUSTER } )
+Pusher.connect_app( APP_KEY, { "cluster": APP_CLUSTER } )
 ```
 
 ### Listen for connection events:
@@ -67,13 +66,9 @@ func connected_handler(data):
   
  func error_handler(data):
   print("Oh No!")
-  
-var error_callback = funcref(self, "error_handler")  
-var connected_callback = funcref(self, "connected_handler")
 
-$Pusher.connection.bind("error", error_callback);
-$Pusher.connection.bind("connected", connected_callback);
-
+Pusher.connection_established.connect(connected_handler);
+Pusher.connection_error.connect(error_callback);
 ```
 
 ### User authentication
@@ -81,7 +76,7 @@ $Pusher.connection.bind("connected", connected_callback);
 Authentication happens when you call the signin `method`:
 
 ```js
-$Pusher.signin()
+Pusher.signin()
 ```
 
 See full [documentation](https://pusher.com/docs/channels/using_channels/user-authentication/)
@@ -90,32 +85,26 @@ See full [documentation](https://pusher.com/docs/channels/using_channels/user-au
 
 Before your app can receive any events from a channel, you need to subscribe to the channel. Do this with the `subscribe` method:
 ```swift
-var channel = $Pusher.subscribe("channel-name")
+var channel = Pusher.subscribe("channel-name")
 ```
 
 ### Listen for events on your channel
 Every published event has an “event name”. For your app to do something when it receives an event called "my-event", your web app must first “bind” a function to this event name. Do this using the channel’s `bind` method:
 
 ```swift 
-func event_handler(data):
-  print(data)
- 
-var event_callback = funcref(self, "event_handler")
+func event_handler(event_data):
+  print(event_data)
 
-channel.bind("my-event", event_callback)
+channel.bind("my-event", event_handler)
 ```
 
 ### Triggering client events
 You can only trigger a client event once a subscription has been successfully registered:
-```js
-
-var channel = $Pusher.subscribe("channel-name")
-var on_subscribed = func_ref(self, "handle_subscription")
-
-channel.bind(PusherEvent.SUBSCRIPTION_SUCCEEDED, on_subscribed);
-```
-
 ```swift
+
+var channel = Pusher.subscribe("channel-name")
+channel.bind(PusherEvent.SUBSCRIPTION_SUCCEEDED, handle_subscription);
+
 func handle_subscription():
 	channel.trigger("client-someEventName", { "message": "hello!" })
 ```
@@ -128,7 +117,7 @@ See full [documentation](https://pusher.com/docs/channels/using_channels/events/
 It is possible to set and update the client configuration through the `configure` method:
 
 ```swift
-$Pusher.configure(KEY, OPTIONS)
+Pusher.configure(KEY, OPTIONS)
 ```
 
 Params of the `configure` method:
@@ -167,24 +156,14 @@ Based on Pusher [channelAuthorization](https://pusher.com/docs/channels/using_ch
 | endpoint            | string       | URL [endpoint](https://pusher.com/docs/channels/using_channels/connection/#channelauthorizationendpoint-1363574431) |
 
 ### Loggin
-By default we don’t log anything. If you want to debug your application and see what’s going on within Channels then you can assign a global logging function.
-The `_log` value should be set with a function with the following signature:
+By default nothing will be log to the debug console. If you want to debug your application and see what’s going on within Channels then you can set the `debug` value to true:
 
 ```swift
-$Pusher._log = funcref(self, "logger")
-  
-func logger(message):
-	print(message)
+Pusher.debug = true
 ```
 
 ## Connection
-A connection to Pusher Channels can be established by invoking the `connect_app` method of your pusher node:
-
-```swift
-$Pusher.connect_app()
-```
-
-A connection with custom configuration can be established by passing the same params from [configure](#runtime) method:
+A connection to Pusher Channels can be established by invoking the `connect_app` method, the configuration can be established by passing the same params from [configure](#runtime) method:
 
 ```swift
 $Pusher.connect_app(APP_KEY, { "cluster": APP_CLUSTER })
@@ -194,7 +173,7 @@ $Pusher.connect_app(APP_KEY, { "cluster": APP_CLUSTER })
 You may disconnect by invoking the `disconnect_app` method:
 
 ```swift
-$Pusher.disconnect_app()
+Pusher.disconnect_app()
 ```
 
 ### Connection States
@@ -204,20 +183,20 @@ You can monitor the state of the connection so that you can notify users about e
 ####  Available states
 You can access the current state as:
 
-```js
-$Pusher.connection.state
+```swift
+Pusher.connection_state
 ```
 
- And bind to a state change using the connection `bind` method: 
+ To listen for connection state changes use the connection_state_changed signal: 
  
  ```swift
-$Pusher.connection.bind("connected", callback)
+$Pusher.connection_state_changed.connect(callback)
  ```
+
 All state names are available as constants trough the `PusherState` class:
 
-```js
+```swift
 // PusherState.CONNECTED == "connected"
-$Pusher.connection.bind(PusherState.CONNECTED, callback)
 ```
 
 See full list: [Available connection states](https://pusher.com/docs/channels/using_channels/connection/#available-states)
@@ -225,21 +204,21 @@ See full list: [Available connection states](https://pusher.com/docs/channels/us
 ## Channels
 
 ### Subscribing to channels
-The default method for subscribing to a channel involves invoking the `subscribe` method of your pusher node:
+The default method for subscribing to a channel involves invoking the `subscribe` method:
 ```swift
-$Pusher.subscribe("my-channel");
+Pusher.subscribe("my-channel");
 ```
 
 ### Unsubscribing from channels
-To unsubscribe from a channel, invoke the `unsubscribe` method of your pusher object:
+To unsubscribe from a channel, invoke the `unsubscribe` method:
 ```swift
 $Pusher.unsubscribe("my-channel");
 ```
 
 ### Accessing channels
-If a channel has been subscribed to already it is possible to access channels by name, through the `channel` method:
+If a channel has been subscribed to already it is possible to access channels by name, through the `get_channel` method:
 ```swift
-var channel = $Pusher.channel("channel-name")
+var channel = Pusher.get_channel("channel-name")
 ```
 
 ## Binding to events
@@ -255,19 +234,7 @@ Params of the `bind` method:
 | Param            | Type         | description             |
 |------------------|--------------|-------------------------|
 | event            | string       | The name of the event to bind to. | 
-| callback         | funcRef      | Called whenever the event is triggered. See [below](#event-callback) |
-
-### Event callback
-In GDScript, functions are not first-class objects. This means it is impossible to store them directly as variables, return them from another function, or pass them as arguments.
-
-However, by creating a FuncRef reference to a function in a given object can be created, passed around and called:
-
-```swift
-func event_handler(data):
-  print("Event received")
-  
-var callback = funcref(self, "event_handler")
-```
+| callback         | Callable     | Called whenever the event is triggered. |
 
 ### Binding on the channel
 Events can be bound to directly on a channel. This means you will only receive an event if it is sent on that specific channel:
@@ -279,7 +246,7 @@ channel.bind(eventName, callback)
 Use `unbind` to remove a binding of an event:
 
 ```swift
-$Pusher.unbind(EVENT, CALLBACK)
+Pusher.unbind(EVENT, CALLBACK)
 ```
 
 Params of the `unbind` method:
@@ -287,5 +254,5 @@ Params of the `unbind` method:
 | Param            | Type         | description             |
 |------------------|--------------|-------------------------|
 | event            | string       | The name of the event from which your want to remove the binding. | 
-| callback         | funcRef      | The function reference used when binding to the event.    |
+| callback         | Callable     | Callable used when binding to the event.    |
 
